@@ -1,4 +1,4 @@
-//go:generate mockgen -package listeners -destination mock_test.go github.com/hr3lxphr6j/bililive-go/src/listeners Listener,Manager
+//go:generate mockgen -package listeners -destination mock_test.go github.com/luckycat0426/bililive-go/src/listeners Listener,Manager
 package listeners
 
 import (
@@ -8,11 +8,11 @@ import (
 
 	"github.com/lthibault/jitterbug"
 
-	"github.com/hr3lxphr6j/bililive-go/src/configs"
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/interfaces"
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/events"
+	"github.com/luckycat0426/bililive-go/src/configs"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/interfaces"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/pkg/events"
 )
 
 const (
@@ -102,6 +102,14 @@ func (l *listener) refresh() {
 	case statusToFalseEvt:
 		evtTyp = LiveEnd
 		logInfo = "Live end"
+		l.ed.DispatchEvent(events.NewEvent(evtTyp, l.Live))
+		l.logger.WithFields(fields).Info(logInfo)
+		if l.Live.NeedUpload() {
+			evtTyp = StartUploadWithDelay
+			logInfo = "Start upload With Delay 3 minutes"
+		} else {
+			return
+		}
 	case roomNameChangedEvt:
 		if !l.config.VideoSplitStrategies.OnRoomNameChanged {
 			return

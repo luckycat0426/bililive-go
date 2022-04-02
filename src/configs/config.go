@@ -53,6 +53,7 @@ type Config struct {
 	Debug                bool                 `yaml:"debug"`
 	Interval             int                  `yaml:"interval"`
 	OutPutPath           string               `yaml:"out_put_path"`
+	UploadPath           string               `yaml:"upload_path"`
 	Feature              Feature              `yaml:"feature"`
 	LiveRooms            []string             `yaml:"live_rooms"`
 	OutputTmpl           string               `yaml:"out_put_tmpl"`

@@ -1,4 +1,4 @@
-package uploaders
+package biliUpload
 
 import (
 	"bytes"
@@ -18,7 +18,7 @@ const retry_times = 10
 // 	"Connection": []string{"keep-alive"},
 // }
 
-type uploader struct {
+type chunkUploader struct {
 	upload_id     string
 	chunks        int
 	chunk_size    int
@@ -42,7 +42,7 @@ type chunk_params struct {
 	End        int    `url:"end"`
 }
 
-func (u *uploader) upload() error {
+func (u *chunkUploader) upload() error {
 	for i := 0; i < u.chunks; i++ {
 		buf := make([]byte, u.chunk_size)
 		bufsize, _ := u.file.Read(buf)
@@ -62,7 +62,7 @@ func (u *uploader) upload() error {
 	u.waitGoroutine.Wait()
 	return nil
 }
-func (u *uploader) upload_chunk(data []byte, params chunk_params) error {
+func (u *chunkUploader) upload_chunk(data []byte, params chunk_params) error {
 	u.Maxthreads <- struct{}{}
 	defer func() {
 		<-u.Maxthreads
@@ -82,10 +82,11 @@ func (u *uploader) upload_chunk(data []byte, params chunk_params) error {
 			msg = "上传出现问题，尝试重连"
 			fmt.Println(msg)
 			fmt.Println(err)
+			res.Body.Close()
 			// return err
 		} else {
-			u.chunk_order <- params.PartNumber + 1
-			defer res.Body.Close()
+			u.chunk_order <- params.PartNumber
+			res.Body.Close()
 			break
 		}
 		if i == retry_times {

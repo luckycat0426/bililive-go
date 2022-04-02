@@ -1,4 +1,4 @@
-//go:generate mockgen -package mock -destination mock/mock.go github.com/hr3lxphr6j/bililive-go/src/live Live
+//go:generate mockgen -package mock -destination mock/mock.go github.com/luckycat0426/bililive-go/src/live Live
 package live
 
 import (
@@ -76,6 +76,10 @@ type ID string
 
 type Live interface {
 	GetLiveId() ID
+	NeedUpload() bool
+	SetUpload(bool)
+	SetUploadPath(string)
+	GetUploadPath() string
 	GetRawUrl() string
 	GetInfo() (*Info, error)
 	GetStreamUrls() ([]*url.URL, error)

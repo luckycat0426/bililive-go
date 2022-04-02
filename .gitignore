@@ -9,7 +9,7 @@
 
 # Test binary, build with `go test -c`
 *.test
-
+src/pkg/biliUpload/upload_test.go
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
 ### Windows template
@@ -158,3 +158,4 @@ bin/
 
 # webapp ignore
 node_modules
+/斗鱼/

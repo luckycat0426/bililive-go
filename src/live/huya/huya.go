@@ -11,9 +11,9 @@ import (
 
 	"github.com/hr3lxphr6j/requests"
 
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/live/internal"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/utils"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/live/internal"
+	"github.com/luckycat0426/bililive-go/src/pkg/utils"
 )
 
 const (

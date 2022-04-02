@@ -2,15 +2,16 @@ package recorders
 
 import (
 	"context"
+	"github.com/luckycat0426/bililive-go/src/pkg/biliUpload"
 	"sync"
 	"time"
 
-	"github.com/hr3lxphr6j/bililive-go/src/configs"
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/interfaces"
-	"github.com/hr3lxphr6j/bililive-go/src/listeners"
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/events"
+	"github.com/luckycat0426/bililive-go/src/configs"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/interfaces"
+	"github.com/luckycat0426/bililive-go/src/listeners"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/pkg/events"
 )
 
 func NewManager(ctx context.Context) Manager {
@@ -58,6 +59,26 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 		}
 		if err := m.RestartRecorder(ctx, live); err != nil {
 			instance.GetInstance(ctx).Logger.Errorf("failed to cronRestart recorder, err: %v", err)
+		}
+	}))
+	ed.AddEventListener(listeners.StartUpload, events.NewEventListener(func(event *events.Event) {
+		live := event.Object.(live.Live)
+		inst := instance.GetInstance(ctx)
+		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+			biliUpload.MainUpload(live.GetUploadPath(), b)
+
+		} else {
+			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
+		}
+	}))
+	ed.AddEventListener(listeners.StartUploadWithDelay, events.NewEventListener(func(event *events.Event) {
+		time.Sleep(time.Minute * 3)
+		live := event.Object.(live.Live)
+		inst := instance.GetInstance(ctx)
+		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+			biliUpload.MainUpload(live.GetUploadPath(), b)
+		} else {
+			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
 		}
 	}))
 

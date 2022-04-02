@@ -5,14 +5,16 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/utils"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/pkg/utils"
 )
 
 type BaseLive struct {
 	Url           *url.URL
 	LastStartTime time.Time
 	LiveId        live.ID
+	WithUpload    bool
+	UploadPath    string
 	Options       *live.Options
 }
 
@@ -31,7 +33,18 @@ func NewBaseLive(url *url.URL, opt ...live.Option) BaseLive {
 func (a *BaseLive) GetLiveId() live.ID {
 	return a.LiveId
 }
-
+func (a *BaseLive) NeedUpload() bool {
+	return a.WithUpload
+}
+func (a *BaseLive) SetUpload(b bool) {
+	a.WithUpload = b
+}
+func (a *BaseLive) SetUploadPath(path string) {
+	a.UploadPath = path
+}
+func (a *BaseLive) GetUploadPath() string {
+	return a.UploadPath
+}
 func (a *BaseLive) GetRawUrl() string {
 	return a.Url.String()
 }

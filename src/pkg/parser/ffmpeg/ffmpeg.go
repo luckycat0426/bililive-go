@@ -10,8 +10,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/parser"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/pkg/parser"
 )
 
 const (
@@ -126,7 +126,6 @@ func (p *Parser) ParseLiveStream(url *url.URL, live live.Live, file string) (err
 		"-y", "-re",
 		"-user_agent", userAgent,
 		"-referer", live.GetRawUrl(),
-		"-timeout", "60000000",
 		"-i", url.String(),
 		"-c", "copy",
 		"-bsf:a", "aac_adtstoasc",

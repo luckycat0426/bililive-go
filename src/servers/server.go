@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/webapp"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/webapp"
 )
 
 const (
@@ -42,6 +42,8 @@ func initMux(ctx context.Context) *mux.Router {
 	apiRoute.Use(mux.CORSMethodMiddleware(apiRoute))
 	apiRoute.HandleFunc("/info", getInfo).Methods("GET")
 	apiRoute.HandleFunc("/config", getConfig).Methods("GET")
+	apiRoute.HandleFunc("/UpLives", addUpload).Methods("POST")
+	apiRoute.HandleFunc("/UpLives/{id}", startUploadLive).Methods("GET")
 	apiRoute.HandleFunc("/config", putConfig).Methods("PUT")
 	apiRoute.HandleFunc("/lives", getAllLives).Methods("GET")
 	apiRoute.HandleFunc("/lives", addLives).Methods("POST")

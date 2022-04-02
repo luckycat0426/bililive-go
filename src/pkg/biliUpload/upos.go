@@ -1,4 +1,4 @@
-package uploaders
+package biliUpload
 
 import (
 	"bytes"
@@ -57,14 +57,12 @@ type parts_json struct {
 
 func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, error) {
 	uploadUrl := "https:" + ret.Endpoint + "/" + strings.TrimPrefix(ret.UposURI, "upos://")
-	// client := &http.Client{}
+	client := &http.Client{}
 	req, err := http.NewRequest("POST", uploadUrl+"?uploads&output=json", nil)
-	req.Header = Header
 	req.Header.Add("X-Upos-Auth", ret.Auth)
 	if err != nil {
 		return nil, err
 	}
-	req.Header = Header
 	res, err := client.Do(req)
 	if err != nil {
 		return nil, err
@@ -76,7 +74,7 @@ func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, 
 	t := pre_upload_json{}
 	_ = json.Unmarshal(body, &t)
 
-	segments := &uploader{
+	segments := &chunkUploader{
 		upload_id:     t.UploadID,
 		chunks:        int(math.Ceil(float64(total_size) / float64(ret.ChunkSize))),
 		chunk_size:    ret.ChunkSize,
@@ -85,7 +83,7 @@ func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, 
 		url:           uploadUrl,
 		chunk_order:   make(chan int, 5200),
 		file:          file,
-		Header:        Header,
+		Header:        req.Header,
 		Maxthreads:    make(chan struct{}, Threads),
 		waitGoroutine: sync.WaitGroup{},
 	}
@@ -100,10 +98,10 @@ func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, 
 		})
 
 	}
-	json_part, _ := json.Marshal(part)
-	fmt.Println(json_part)
+	jsonPart, _ := json.Marshal(part)
+	fmt.Println(string(jsonPart))
 	params := &upload_param{
-		Name:     file.Name(),
+		Name:     filepath.Base(file.Name()),
 		UploadId: t.UploadID,
 		BizID:    ret.BizID,
 		Output:   "json",
@@ -111,7 +109,7 @@ func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, 
 	}
 	p, _ := query.Values(params)
 	for i := 0; i <= 5; i++ {
-		req, _ := http.NewRequest("POST", uploadUrl, bytes.NewBuffer(json_part))
+		req, _ := http.NewRequest("POST", uploadUrl, bytes.NewBuffer(jsonPart))
 		req.URL.RawQuery = p.Encode()
 		client := &http.Client{}
 		req.Header.Add("X-Upos-Auth", ret.Auth)
@@ -137,8 +135,15 @@ func upos(file *os.File, total_size int, ret upos_upload_segments) (*uploadRes, 
 				Desc:     "",
 			}
 			return upRes, nil
+		} else {
+			fmt.Println(string(body))
+			fmt.Println(file.Name(), "第", i, "次上传失败，正在重试")
+			if i == 5 {
+				fmt.Println(file.Name(), "第5次上传失败")
+				return nil, errors.New("分片上传失败")
+			}
 		}
 	}
 
-	return nil, errors.New("上传失败")
+	return nil, errors.New("分片上传失败")
 }

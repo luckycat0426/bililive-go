@@ -4,9 +4,9 @@ import (
 	"context"
 	"sync"
 
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/interfaces"
-	"github.com/hr3lxphr6j/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/interfaces"
+	"github.com/luckycat0426/bililive-go/src/live"
 )
 
 // for test

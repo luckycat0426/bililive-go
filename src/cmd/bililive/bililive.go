@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/luckycat0426/bililive-go/src/pkg/biliUpload"
 	"net/url"
 	"os"
 	"os/signal"
@@ -11,19 +12,19 @@ import (
 
 	"github.com/bluele/gcache"
 
-	_ "github.com/hr3lxphr6j/bililive-go/src/cmd/bililive/internal"
-	"github.com/hr3lxphr6j/bililive-go/src/cmd/bililive/internal/flag"
-	"github.com/hr3lxphr6j/bililive-go/src/configs"
-	"github.com/hr3lxphr6j/bililive-go/src/consts"
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/listeners"
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/log"
-	"github.com/hr3lxphr6j/bililive-go/src/metrics"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/events"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/utils"
-	"github.com/hr3lxphr6j/bililive-go/src/recorders"
-	"github.com/hr3lxphr6j/bililive-go/src/servers"
+	_ "github.com/luckycat0426/bililive-go/src/cmd/bililive/internal"
+	"github.com/luckycat0426/bililive-go/src/cmd/bililive/internal/flag"
+	"github.com/luckycat0426/bililive-go/src/configs"
+	"github.com/luckycat0426/bililive-go/src/consts"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/listeners"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/log"
+	"github.com/luckycat0426/bililive-go/src/metrics"
+	"github.com/luckycat0426/bililive-go/src/pkg/events"
+	"github.com/luckycat0426/bililive-go/src/pkg/utils"
+	"github.com/luckycat0426/bililive-go/src/recorders"
+	"github.com/luckycat0426/bililive-go/src/servers"
 )
 
 func init() {
@@ -67,6 +68,7 @@ func main() {
 	events.NewDispatcher(ctx)
 
 	inst.Lives = make(map[live.ID]live.Live)
+	inst.Biliup = make(map[live.ID]biliUpload.Biliup)
 	for _, room := range inst.Config.LiveRooms {
 		u, err := url.Parse(room)
 		if err != nil {

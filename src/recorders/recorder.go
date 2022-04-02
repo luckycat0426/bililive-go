@@ -1,4 +1,4 @@
-//go:generate mockgen -package recorders -destination mock_test.go github.com/hr3lxphr6j/bililive-go/src/recorders Recorder,Manager
+//go:generate mockgen -package recorders -destination mock_test.go github.com/luckycat0426/bililive-go/src/recorders Recorder,Manager
 package recorders
 
 import (
@@ -17,15 +17,15 @@ import (
 	"github.com/bluele/gcache"
 	"github.com/sirupsen/logrus"
 
-	"github.com/hr3lxphr6j/bililive-go/src/configs"
-	"github.com/hr3lxphr6j/bililive-go/src/instance"
-	"github.com/hr3lxphr6j/bililive-go/src/interfaces"
-	"github.com/hr3lxphr6j/bililive-go/src/live"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/events"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/parser"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/parser/ffmpeg"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/parser/native/flv"
-	"github.com/hr3lxphr6j/bililive-go/src/pkg/utils"
+	"github.com/luckycat0426/bililive-go/src/configs"
+	"github.com/luckycat0426/bililive-go/src/instance"
+	"github.com/luckycat0426/bililive-go/src/interfaces"
+	"github.com/luckycat0426/bililive-go/src/live"
+	"github.com/luckycat0426/bililive-go/src/pkg/events"
+	"github.com/luckycat0426/bililive-go/src/pkg/parser"
+	"github.com/luckycat0426/bililive-go/src/pkg/parser/ffmpeg"
+	"github.com/luckycat0426/bililive-go/src/pkg/parser/native/flv"
+	"github.com/luckycat0426/bililive-go/src/pkg/utils"
 )
 
 const (
@@ -121,6 +121,7 @@ func (r *recorder) tryRecode() {
 		panic(fmt.Sprintf("failed to render filename, err: %v", err))
 	}
 	fileName := filepath.Join(r.OutPutPath, buf.String())
+	r.Live.SetUploadPath(filepath.Dir(fileName))
 	outputPath, _ := filepath.Split(fileName)
 	url := urls[0]
 	if err = mkdir(outputPath); err != nil {
