@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+//test
 type submitParams struct {
 	Copyright    int    `json:"copyright"`
 	Source       string `json:"source"`
