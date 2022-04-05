@@ -65,21 +65,24 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 		live := event.Object.(live.Live)
 		inst := instance.GetInstance(ctx)
 		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+			live.SetUploadInfo(true)
 			biliUpload.MainUpload(live.GetUploadPath(), b)
-
 		} else {
 			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
 		}
+		live.SetUploadInfo(false)
 	}))
 	ed.AddEventListener(listeners.StartUploadWithDelay, events.NewEventListener(func(event *events.Event) {
 		time.Sleep(time.Minute * 3)
 		live := event.Object.(live.Live)
 		inst := instance.GetInstance(ctx)
 		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+			live.SetUploadInfo(true)
 			biliUpload.MainUpload(live.GetUploadPath(), b)
 		} else {
 			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
 		}
+		live.SetUploadInfo(false)
 	}))
 
 	removeEvtListener := events.NewEventListener(func(event *events.Event) {

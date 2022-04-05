@@ -6,6 +6,7 @@
 *.dll
 *.so
 *.dylib
+src/pkg/biliUpload/upload_test.go
 
 # Test binary, build with `go test -c`
 *.test

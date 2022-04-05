@@ -14,6 +14,7 @@ type BaseLive struct {
 	LastStartTime time.Time
 	LiveId        live.ID
 	WithUpload    bool
+	UploadInfo    bool
 	UploadPath    string
 	Options       *live.Options
 }
@@ -33,8 +34,14 @@ func NewBaseLive(url *url.URL, opt ...live.Option) BaseLive {
 func (a *BaseLive) GetLiveId() live.ID {
 	return a.LiveId
 }
+func (a *BaseLive) SetUploadInfo(uploadInfo bool) {
+	a.UploadInfo = uploadInfo
+}
 func (a *BaseLive) NeedUpload() bool {
 	return a.WithUpload
+}
+func (a *BaseLive) GetUploadInfo() bool {
+	return a.UploadInfo
 }
 func (a *BaseLive) SetUpload(b bool) {
 	a.WithUpload = b

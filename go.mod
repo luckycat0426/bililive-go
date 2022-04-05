@@ -18,6 +18,7 @@ require (
 	github.com/imdario/mergo v0.3.11 // indirect
 	github.com/lthibault/jitterbug v2.0.0+incompatible
 	github.com/mitchellh/copystructure v1.0.0 // indirect
+	github.com/pkg/profile v1.6.0
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/prometheus/client_golang v1.11.0
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
@@ -26,6 +27,7 @@ require (
 	github.com/stretchr/testify v1.6.1
 	github.com/tidwall/gjson v1.8.1
 	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/valyala/fasthttp v1.34.0
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )

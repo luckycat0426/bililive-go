@@ -5,9 +5,9 @@ import (
 )
 
 type Info struct {
-	Live                        Live
-	HostName, RoomName          string
-	Status, Listening, Recoding bool
+	Live                                   Live
+	HostName, RoomName                     string
+	Status, Listening, Recoding, Uploading bool
 }
 
 func (i *Info) MarshalJSON() ([]byte, error) {
@@ -20,6 +20,7 @@ func (i *Info) MarshalJSON() ([]byte, error) {
 		Status            bool   `json:"status"`
 		Listening         bool   `json:"listening"`
 		Recoding          bool   `json:"recoding"`
+		Uploading         bool   `json:"uploading"`
 		LastStartTime     string `json:"last_start_time,omitempty"`
 		LastStartTimeUnix int64  `json:"last_start_time_unix,omitempty"`
 	}{
@@ -31,6 +32,7 @@ func (i *Info) MarshalJSON() ([]byte, error) {
 		Status:         i.Status,
 		Listening:      i.Listening,
 		Recoding:       i.Recoding,
+		Uploading:      i.Uploading,
 	}
 	if !i.Live.GetLastStartTime().IsZero() {
 		t.LastStartTime = i.Live.GetLastStartTime().Format("2006-01-02 15:04:05")

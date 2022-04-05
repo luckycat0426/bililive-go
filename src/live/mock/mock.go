@@ -122,6 +122,20 @@ func (mr *MockLiveMockRecorder) GetStreamUrls() *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetStreamUrls", reflect.TypeOf((*MockLive)(nil).GetStreamUrls))
 }
 
+// GetUploadInfo mocks base method.
+func (m *MockLive) GetUploadInfo() bool {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetUploadInfo")
+	ret0, _ := ret[0].(bool)
+	return ret0
+}
+
+// GetUploadInfo indicates an expected call of GetUploadInfo.
+func (mr *MockLiveMockRecorder) GetUploadInfo() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetUploadInfo", reflect.TypeOf((*MockLive)(nil).GetUploadInfo))
+}
+
 // GetUploadPath mocks base method.
 func (m *MockLive) GetUploadPath() string {
 	m.ctrl.T.Helper()
@@ -172,6 +186,18 @@ func (m *MockLive) SetUpload(arg0 bool) {
 func (mr *MockLiveMockRecorder) SetUpload(arg0 interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUpload", reflect.TypeOf((*MockLive)(nil).SetUpload), arg0)
+}
+
+// SetUploadInfo mocks base method.
+func (m *MockLive) SetUploadInfo(arg0 bool) {
+	m.ctrl.T.Helper()
+	m.ctrl.Call(m, "SetUploadInfo", arg0)
+}
+
+// SetUploadInfo indicates an expected call of SetUploadInfo.
+func (mr *MockLiveMockRecorder) SetUploadInfo(arg0 interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetUploadInfo", reflect.TypeOf((*MockLive)(nil).SetUploadInfo), arg0)
 }
 
 // SetUploadPath mocks base method.

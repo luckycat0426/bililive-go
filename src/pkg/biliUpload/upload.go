@@ -10,33 +10,36 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+
+	"github.com/pkg/profile"
+
 	"path/filepath"
 	"time"
 )
 
 type Biliup struct {
-	User        User
-	Lives       string
-	UploadLines string
-	Threads     int
+	User        User   `json:"user"`
+	Lives       string `json:"url"`
+	UploadLines string `json:"upload_lines"`
+	Threads     int    `json:"threads"`
 	VideoInfos
 }
 type VideoInfos struct {
-	Tid         int
-	Title       string
-	Tag         []string
-	Source      string
-	Cover       string
-	CoverPath   string
-	Description string
-	Copyright   int
+	Tid         int      `json:"tid"`
+	Title       string   `json:"title"`
+	Tag         []string `json:"tag,omitempty"`
+	Source      string   `json:"source,omitempty"`
+	Cover       string   `json:"cover,omitempty"`
+	CoverPath   string   `json:"cover_path,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Copyright   int      `json:"copyright,omitempty"`
 }
 type User struct {
-	SESSDATA        string
-	BiliJct         string
-	DedeUserID      string
-	DedeuseridCkmd5 string
-	AccessToken     string
+	SESSDATA        string `json:"SESSDATA"`
+	BiliJct         string `json:"bili_jct"`
+	DedeUserID      string `json:"DedeUserID"`
+	DedeuseridCkmd5 string `json:"DedeUserID__ckMd5"`
+	AccessToken     string `json:"access_token"`
 }
 type uploadRes struct {
 	Title    string `json:"title"`
@@ -73,6 +76,7 @@ func CookieLoginCheck(u User) error {
 	apiUrl := "https://api.bilibili.com/x/web-interface/nav"
 	req, _ := http.NewRequest("GET", apiUrl, nil)
 	res, _ := client.Do(req)
+	defer res.Body.Close()
 	body, _ := ioutil.ReadAll(res.Body)
 	var t struct {
 		Code int `json:"code"`
@@ -112,6 +116,7 @@ func upload(file *os.File, user User) (*uploadRes, error) {
 	queryUrl := "https://member.bilibili.com/preupload?upcdn=ws&probe_version=20200810"
 	req, _ := http.NewRequest("GET", queryUrl+v.Encode(), nil)
 	res, _ := client.Do(req)
+	defer res.Body.Close()
 	var body upos_upload_segments
 	content, _ := ioutil.ReadAll(res.Body)
 	fmt.Println(string(content))
@@ -146,13 +151,16 @@ func FolderUpload(folder string, u User) ([]*uploadRes, error) {
 		videoPart, err := upload(uploadFile, u)
 		if err != nil {
 			fmt.Printf("upload file error:%s", err)
-			return nil, err
+			uploadFile.Close()
+			continue
 		}
 		submitFiles = append(submitFiles, videoPart)
+		uploadFile.Close()
 	}
 	return submitFiles, nil
 }
 func MainUpload(uploadPath string, Biliup Biliup) error {
+	defer profile.Start().Stop()
 	var submitFiles []*uploadRes
 	if !filepath.IsAbs(uploadPath) {
 		pwd, _ := os.Getwd()

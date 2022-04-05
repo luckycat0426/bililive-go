@@ -1,13 +1,13 @@
 package biliUpload
 
 import (
-	"bytes"
+	"errors"
 	"fmt"
+	"github.com/google/go-querystring/query"
+	"github.com/valyala/fasthttp"
 	"net/http"
 	"os"
 	"sync"
-
-	"github.com/google/go-querystring/query"
 )
 
 const retry_times = 10
@@ -43,7 +43,9 @@ type chunk_params struct {
 }
 
 func (u *chunkUploader) upload() error {
+
 	for i := 0; i < u.chunks; i++ {
+		u.Maxthreads <- struct{}{}
 		buf := make([]byte, u.chunk_size)
 		bufsize, _ := u.file.Read(buf)
 		chunk := chunk_params{
@@ -57,42 +59,37 @@ func (u *chunkUploader) upload() error {
 			End:        i*u.chunk_size + bufsize,
 		}
 		u.waitGoroutine.Add(1)
-		go u.upload_chunk(buf, chunk)
+		go u.uploadChunk(buf, chunk)
 	}
 	u.waitGoroutine.Wait()
 	return nil
 }
-func (u *chunkUploader) upload_chunk(data []byte, params chunk_params) error {
-	u.Maxthreads <- struct{}{}
+func (u *chunkUploader) uploadChunk(data []byte, params chunk_params) error {
 	defer func() {
+		u.waitGoroutine.Done()
 		<-u.Maxthreads
 	}()
-	var msg string
-	client := &http.Client{}
+	req := fasthttp.AcquireRequest()
+	req.Header.SetMethod("PUT")
+	req.Header.Set("X-Upos-Auth", u.Header.Get("X-Upos-Auth"))
+	req.SetBodyRaw(data)
 	vals, _ := query.Values(params)
-	req, err := http.NewRequest("PUT", u.url, bytes.NewBuffer(data))
-	req.URL.RawQuery = vals.Encode()
-	req.Header = u.Header
-	if err != nil {
-		return err
-	}
+	req.SetRequestURI(u.url + "?" + vals.Encode())
 	for i := 0; i <= retry_times; i++ {
-		res, err := client.Do(req)
+		err := fasthttp.Do(req, nil)
+		fasthttp.ReleaseRequest(req)
 		if err != nil {
-			msg = "上传出现问题，尝试重连"
-			fmt.Println(msg)
+			fmt.Println("上传分块出现问题，尝试重连")
 			fmt.Println(err)
-			res.Body.Close()
-			// return err
 		} else {
 			u.chunk_order <- params.PartNumber
-			res.Body.Close()
 			break
 		}
 		if i == retry_times {
-			return err
+			fmt.Println("上传分块出现问题，重试次数超过限制")
+			return errors.New(string(u.chunks) + "分块上传失败")
 		}
 	}
-	u.waitGoroutine.Done()
+
 	return nil
 }

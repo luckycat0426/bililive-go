@@ -27,6 +27,7 @@ func parseInfo(ctx context.Context, l live.Live) *live.Info {
 	info := obj.(*live.Info)
 	info.Listening = inst.ListenerManager.(listeners.Manager).HasListener(ctx, l.GetLiveId())
 	info.Recoding = inst.RecorderManager.(recorders.Manager).HasRecorder(ctx, l.GetLiveId())
+	info.Uploading = l.GetUploadInfo()
 	return info
 }
 

@@ -1,8 +1,11 @@
 package biliUpload
 
-import "testing"
+import (
+	"testing"
+)
 
 func TestMainUpload(t *testing.T) {
+
 	type args struct {
 		uploadPath string
 		Biliup     Biliup
@@ -14,7 +17,7 @@ func TestMainUpload(t *testing.T) {
 	}{
 		name: "TestMainUpload",
 		args: args{
-			uploadPath: "C:\\Users\\426\\GolandProjects\\bililive-go\\斗鱼\\pigff",
+			uploadPath: "C:\\Users\\426\\GolandProjects\\编译结果\\斗鱼\\火星东某人",
 			Biliup: Biliup{
 				User: User{
 					SESSDATA:        "7e4269eb%2C1663017131%2Cafa75e31",

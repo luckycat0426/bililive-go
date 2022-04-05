@@ -82,6 +82,8 @@ type Live interface {
 	GetUploadPath() string
 	GetRawUrl() string
 	GetInfo() (*Info, error)
+	GetUploadInfo() bool
+	SetUploadInfo(bool)
 	GetStreamUrls() ([]*url.URL, error)
 	GetPlatformCNName() string
 	GetLastStartTime() time.Time

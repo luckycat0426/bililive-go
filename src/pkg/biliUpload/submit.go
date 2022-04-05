@@ -64,7 +64,7 @@ func submit(u Biliup, v []*uploadRes) error {
 			if i == 20 {
 				return err
 			}
-
+			continue
 		}
 		body, _ := ioutil.ReadAll(res.Body)
 		t := struct {
@@ -79,6 +79,7 @@ func submit(u Biliup, v []*uploadRes) error {
 		} else {
 			break
 		}
+		res.Body.Close()
 	}
 
 	return nil
