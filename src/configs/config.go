@@ -54,6 +54,7 @@ type Config struct {
 	Interval             int                  `yaml:"interval"`
 	OutPutPath           string               `yaml:"out_put_path"`
 	UploadPath           string               `yaml:"upload_path"`
+	CertPath             string               `yaml:"cert_path"`
 	Feature              Feature              `yaml:"feature"`
 	LiveRooms            []string             `yaml:"live_rooms"`
 	OutputTmpl           string               `yaml:"out_put_tmpl"`
@@ -63,6 +64,7 @@ type Config struct {
 
 var defaultConfig = Config{
 	RPC:        defaultRPC,
+	CertPath:   "./cert/",
 	Debug:      false,
 	Interval:   30,
 	OutPutPath: "./",

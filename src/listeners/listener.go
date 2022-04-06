@@ -102,14 +102,7 @@ func (l *listener) refresh() {
 	case statusToFalseEvt:
 		evtTyp = LiveEnd
 		logInfo = "Live end"
-		l.ed.DispatchEvent(events.NewEvent(evtTyp, l.Live))
-		l.logger.WithFields(fields).Info(logInfo)
-		if l.Live.NeedUpload() {
-			evtTyp = StartUploadWithDelay
-			logInfo = "Start upload With Delay 3 minutes"
-		} else {
-			return
-		}
+		l.Live.SetUploadInfo(true)
 	case roomNameChangedEvt:
 		if !l.config.VideoSplitStrategies.OnRoomNameChanged {
 			return

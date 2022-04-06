@@ -1,0 +1,20 @@
+syntax="proto3";
+package services;
+import "google/protobuf/struct.proto";
+
+option go_package = "./rpcServices";
+message RecordRequest {
+  string record_url=1;
+  int32 id = 2;
+  google.protobuf.Struct biliup= 3;
+}
+message RecordResponse {
+  int32 code = 1;
+  bool record_status = 2;
+  bool upload_status = 3;
+  string msg = 4;
+
+}
+service RecordService{
+  rpc Record(RecordRequest) returns(stream RecordResponse){} ;
+}

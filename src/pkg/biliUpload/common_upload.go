@@ -59,7 +59,8 @@ func (u *chunkUploader) upload() error {
 			End:        i*u.chunk_size + bufsize,
 		}
 		u.waitGoroutine.Add(1)
-		go u.uploadChunk(buf, chunk)
+		u.uploadChunk(buf, chunk)
+
 	}
 	u.waitGoroutine.Wait()
 	return nil

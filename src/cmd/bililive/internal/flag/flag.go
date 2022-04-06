@@ -19,6 +19,7 @@ var (
 	Output          = app.Flag("output", "Output file path.").Short('o').Default("./").String()
 	Input           = app.Flag("input", "Live room urls").Short('i').Strings()
 	Conf            = app.Flag("config", "Config file.").Short('c').String()
+	CertPath        = app.Flag("certpath", "Certificate file path.").Short('e').Default(" cert/").String()
 	RPC             = app.Flag("enable-rpc", "Enable RPC server.").Default("false").Bool()
 	RPCBind         = app.Flag("rpc-bind", "RPC server bind address").Default(":8080").String()
 	NativeFlvParser = app.Flag("native-flv-parser", "use native flv parser").Default("false").Bool()
@@ -38,6 +39,7 @@ func GenConfigFromFlags() *configs.Config {
 			Bind:   *RPCBind,
 		},
 		Debug:      *Debug,
+		CertPath:   *CertPath,
 		Interval:   *Interval,
 		OutPutPath: *Output,
 		OutputTmpl: *OutputFileTmpl,

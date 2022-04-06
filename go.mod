@@ -11,7 +11,6 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/golang/mock v1.6.0
 	github.com/google/go-querystring v1.1.0
-	github.com/google/uuid v1.1.2 // indirect
 	github.com/gorilla/mux v1.7.4
 	github.com/hr3lxphr6j/requests v0.0.1
 	github.com/huandu/xstrings v1.3.2 // indirect
@@ -24,10 +23,12 @@ require (
 	github.com/robertkrimen/otto v0.0.0-20191219234010-c382bd3c16ff
 	github.com/satori/go.uuid v1.2.1-0.20181028125025-b2ce2384e17b
 	github.com/sirupsen/logrus v1.6.0
-	github.com/stretchr/testify v1.6.1
+	github.com/stretchr/testify v1.7.0
 	github.com/tidwall/gjson v1.8.1
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/valyala/fasthttp v1.34.0
+	google.golang.org/grpc v1.45.0
+	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.3.0
 )
