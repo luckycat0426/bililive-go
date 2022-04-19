@@ -11,11 +11,11 @@ import (
 	"net/url"
 	"os"
 
-	"github.com/pkg/profile"
-
 	"path/filepath"
 	"time"
 )
+
+var ChunkSize int = 10485760
 
 type Biliup struct {
 	User        User   `json:"user"`
@@ -41,7 +41,7 @@ type User struct {
 	DedeuseridCkmd5 string `json:"DedeUserID__ckMd5"`
 	AccessToken     string `json:"access_token"`
 }
-type uploadRes struct {
+type UploadRes struct {
 	Title    string `json:"title"`
 	Filename string `json:"filename"`
 	Desc     string `json:"desc"`
@@ -52,8 +52,18 @@ type UploadedVideoInfo struct {
 	filename string
 	desc     string
 }
+type uploadOs struct {
+	os       string
+	query    string
+	probeUrl string
+}
 
 var client http.Client
+var Header = http.Header{
+	"User-Agent": []string{"Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/63.0.3239.108"},
+	"Referer":    []string{"https://www.bilibili.com"},
+	"Connection": []string{"keep-alive"},
+}
 
 func init() {
 
@@ -89,11 +99,50 @@ func CookieLoginCheck(u User) error {
 	client.Jar.SetCookies(urlObj, cookie)
 	return nil
 }
-func upload(file *os.File, user User) (*uploadRes, error) {
+func selectUploadOs(lines string) uploadOs {
+	var os uploadOs
+	if lines == "auto" {
+	} else {
+		if lines == "bda2" {
+			os = uploadOs{
+				os:       "upos",
+				query:    "upcdn=bda2&probe_version=20200810",
+				probeUrl: "//upos-sz-upcdnbda2.bilivideo.com/OK",
+			}
+		} else if lines == "ws" {
+			os = uploadOs{
+				os:       "upos",
+				query:    "upcdn=ws&probe_version=20200810",
+				probeUrl: "//upos-sz-upcdnws.bilivideo.com/OK",
+			}
+		} else if lines == "qn" {
+			os = uploadOs{
+				os:       "upos",
+				query:    "upcdn=qn&probe_version=20200810",
+				probeUrl: "//upos-sz-upcdnqn.bilivideo.com/OK",
+			}
+		} else if lines == "cos" {
+			os = uploadOs{
+				os:       "cos",
+				query:    "",
+				probeUrl: "",
+			}
+		} else if lines == "cos-internal" {
+			os = uploadOs{
+				os:       "cos-internal",
+				query:    "",
+				probeUrl: "",
+			}
+		}
+	}
+	return os
+}
+func UploadFile(file *os.File, user User, lines string) (*UploadRes, error) {
 	if err := CookieLoginCheck(user); err != nil {
 		fmt.Println("cookie 校验失败")
-		return &uploadRes{}, err
+		return &UploadRes{}, err
 	}
+	upOs := selectUploadOs(lines)
 	state, _ := file.Stat()
 	q := struct {
 		R       string `url:"r"`
@@ -104,41 +153,62 @@ func upload(file *os.File, user User) (*uploadRes, error) {
 		Name    string `url:"name"`
 		Size    int    `url:"size"`
 	}{
-		R:       "upos",
-		Profile: "ugcupos/bup",
 		Ssl:     0,
 		Version: "2.8.1.2",
 		Build:   2081200,
 		Name:    filepath.Base(file.Name()),
 		Size:    int(state.Size()),
 	}
+	if upOs.os == "cos-internal" {
+		q.R = "cos"
+	} else {
+		q.R = upOs.os
+	}
+	if upOs.os == "upos" {
+		q.Profile = "ugcupos/bup"
+	} else {
+		q.Profile = "ugcupos/bupfetch"
+	}
 	v, _ := query.Values(q)
-	queryUrl := "https://member.bilibili.com/preupload?upcdn=ws&probe_version=20200810"
-	req, _ := http.NewRequest("GET", queryUrl+v.Encode(), nil)
+	client.Timeout = time.Second * 5
+	req, _ := http.NewRequest("GET", "https://member.bilibili.com/preupload?"+upOs.query+v.Encode(), nil)
 	res, _ := client.Do(req)
 	defer res.Body.Close()
-	var body upos_upload_segments
 	content, _ := ioutil.ReadAll(res.Body)
-	fmt.Println(string(content))
-	_ = json.Unmarshal(content, &body)
-	if body.Ok != 1 {
-		return &uploadRes{}, errors.New("query upload failed")
+	if upOs.os == "cos-internal" || upOs.os == "cos" {
+		var internal bool
+		if upOs.os == "cos-internal" {
+			internal = true
+		}
+		body := &cosUploadSegments{}
+		_ = json.Unmarshal(content, &body)
+		if body.Ok != 1 {
+			return &UploadRes{}, errors.New("query Upload Parameters failed")
+		}
+		videoInfo, err := cos(file, int(state.Size()), body, internal, ChunkSize)
+		return videoInfo, err
+
+	} else if upOs.os == "upos" {
+		body := &uposUploadSegments{}
+		_ = json.Unmarshal(content, &body)
+		if body.Ok != 1 {
+			return &UploadRes{}, errors.New("query UploadFile failed")
+		}
+		videoInfo, err := upos(file, int(state.Size()), body)
+		return videoInfo, err
 	}
-	videoInfo, err := upos(file, int(state.Size()), body)
-	return videoInfo, err
+	return &UploadRes{}, errors.New("unknown upload os")
 }
-func FolderUpload(folder string, u User) ([]*uploadRes, error) {
+func FolderUpload(folder string, u User, lines string) ([]*UploadRes, error) {
 	dir, err := ioutil.ReadDir(folder)
 	if err != nil {
 		fmt.Printf("read dir error:%s", err)
 		return nil, err
 	}
-	var submitFiles []*uploadRes
+	var submitFiles []*UploadRes
 	for _, file := range dir {
 		filename := filepath.Join(folder, file.Name())
 		now := time.Now()
-		fmt.Println(file.ModTime())
-		fmt.Println(now.Sub(file.ModTime()))
 		if diff := now.Sub(file.ModTime()); diff.Minutes() < 3 {
 			fmt.Printf("%s is too new, skip it\n", filename)
 			continue
@@ -148,9 +218,9 @@ func FolderUpload(folder string, u User) ([]*uploadRes, error) {
 			fmt.Printf("open file error:%s", err)
 			return nil, err
 		}
-		videoPart, err := upload(uploadFile, u)
+		videoPart, err := UploadFile(uploadFile, u, lines)
 		if err != nil {
-			fmt.Printf("upload file error:%s", err)
+			fmt.Printf("UploadFile file error:%s", err)
 			uploadFile.Close()
 			continue
 		}
@@ -160,21 +230,20 @@ func FolderUpload(folder string, u User) ([]*uploadRes, error) {
 	return submitFiles, nil
 }
 func MainUpload(uploadPath string, Biliup Biliup) error {
-	defer profile.Start().Stop()
-	var submitFiles []*uploadRes
+	var submitFiles []*UploadRes
 	if !filepath.IsAbs(uploadPath) {
 		pwd, _ := os.Getwd()
 		uploadPath = filepath.Join(pwd, uploadPath)
 	}
 	fmt.Println(uploadPath)
-	submitFiles, err := FolderUpload(uploadPath, Biliup.User)
+	submitFiles, err := FolderUpload(uploadPath, Biliup.User, Biliup.UploadLines)
 	if err != nil {
-		fmt.Printf("upload file error:%s", err)
+		fmt.Printf("UploadFile file error:%s", err)
 		return err
 	}
-	err = submit(Biliup, submitFiles)
+	err = Submit(Biliup, submitFiles)
 	if err != nil {
-		fmt.Printf("submit file error:%s", err)
+		fmt.Printf("Submit file error:%s", err)
 		return err
 	}
 	return nil

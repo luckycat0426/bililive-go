@@ -20,7 +20,8 @@ type Status struct {
 }
 
 func (a *RecordService) Record(req *RecordRequest, stream RecordService_RecordServer) error {
-	ctx := stream.Context()
+
+	ctx := stream.(*recordServiceRecordServer).ServerStream.(*serverStream).ctx
 	u, _ := url.Parse(req.GetRecordUrl())
 	marshalJson, _ := req.GetBiliup().MarshalJSON()
 	var biliup biliUpload.Biliup
@@ -28,23 +29,30 @@ func (a *RecordService) Record(req *RecordRequest, stream RecordService_RecordSe
 	inst := instance.GetInstance(ctx)
 	l, err := live.New(u, instance.GetInstance(ctx).Cache)
 	if err != nil {
-		if _, ok := inst.Lives[l.GetLiveId()]; ok {
-			inst.Lives[l.GetLiveId()] = l
-			inst.Biliup[l.GetLiveId()] = biliup
-			inst.ListenerManager.(listeners.Manager).AddListener(ctx, l)
+		return err
+	}
+	if _, ok := inst.Lives[l.GetLiveId()]; !ok {
+		inst.Lives[l.GetLiveId()] = l
+		inst.Biliup[l.GetLiveId()] = biliup
+		err := inst.ListenerManager.(listeners.Manager).AddListener(ctx, l)
+		if err != nil {
+			return err
 		}
 	}
 
 	ticker := time.Tick(1 * time.Second)
 	startUpload := false
 	taskEnd := false
+	var uploadErr error
 	for range ticker {
 		info, _ := l.GetInfo()
 		uploadInfo := l.GetUploadInfo()
 		if uploadInfo && !startUpload {
 			startUpload = true
 			go func() {
-				biliUpload.MainUpload(l.GetUploadPath(), biliup)
+				err := biliUpload.MainUpload(l.GetUploadPath(), biliup)
+				inst.Logger.Errorf("upload error: %v", err)
+				uploadErr = err
 				taskEnd = true
 			}()
 		}
@@ -59,6 +67,9 @@ func (a *RecordService) Record(req *RecordRequest, stream RecordService_RecordSe
 		}
 		if taskEnd {
 			lm := inst.ListenerManager.(listeners.Manager)
+			if uploadErr != nil {
+				return uploadErr
+			}
 			if lm.HasListener(ctx, l.GetLiveId()) {
 				if err := lm.RemoveListener(ctx, l.GetLiveId()); err != nil {
 					inst.Logger.Errorf(err.Error())

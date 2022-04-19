@@ -21,7 +21,7 @@ var (
 	Conf            = app.Flag("config", "Config file.").Short('c').String()
 	CertPath        = app.Flag("certpath", "Certificate file path.").Short('e').Default(" cert/").String()
 	RPC             = app.Flag("enable-rpc", "Enable RPC server.").Default("false").Bool()
-	RPCBind         = app.Flag("rpc-bind", "RPC server bind address").Default(":8080").String()
+	RPCBind         = app.Flag("rpc-bind", "RPC server bind address").Default(":40426").String()
 	NativeFlvParser = app.Flag("native-flv-parser", "use native flv parser").Default("false").Bool()
 	OutputFileTmpl  = app.Flag("output-file-tmpl", "output file name template").Default("").String()
 	SplitStrategies = app.Flag("split-strategies", "video split strategies, support\"on_room_name_changed\", \"max_duration:(duration)\"").Strings()

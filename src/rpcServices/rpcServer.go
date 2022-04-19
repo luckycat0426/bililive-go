@@ -18,6 +18,10 @@ import (
 type Server struct {
 	server *grpc.Server
 }
+type serverStream struct {
+	grpc.ServerStream
+	ctx context.Context
+}
 
 func LoadSeverCert(path string) *credentials.TransportCredentials {
 	cert, err := tls.LoadX509KeyPair(filepath.Join(path+"server-cert.pem"), filepath.Join(path+"server-key.pem"))
@@ -38,17 +42,17 @@ func LoadSeverCert(path string) *credentials.TransportCredentials {
 		os.Exit(1)
 	}
 	creds := credentials.NewTLS(&tls.Config{
+		ClientAuth:   tls.RequireAndVerifyClientCert,
 		Certificates: []tls.Certificate{cert},
+		RootCAs:      certPool,
 		ClientCAs:    certPool,
 	})
 	return &creds
 }
+
 func StreamServerInterceptor(ctx context.Context) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
-		type serverStream struct {
-			grpc.ServerStream
-			ctx context.Context
-		}
+
 		return handler(srv, &serverStream{
 			ServerStream: ss,
 			ctx:          context.WithValue(ss.Context(), instance.Key, instance.GetInstance(ctx)),
@@ -60,6 +64,7 @@ func NewRpcServer(ctx context.Context) *Server {
 	inst := instance.GetInstance(ctx)
 	config := inst.Config
 	rpcServer := grpc.NewServer(grpc.Creds(*LoadSeverCert(config.CertPath)), grpc.StreamInterceptor(StreamServerInterceptor(ctx)))
+	//rpcServer := grpc.NewServer(grpc.Creds(insecure.NewCredentials()), grpc.StreamInterceptor(StreamServerInterceptor(ctx)))
 	RegisterRecordServiceServer(rpcServer, &RecordService{})
 	server := &Server{
 		server: rpcServer,
@@ -71,7 +76,13 @@ func NewRpcServer(ctx context.Context) *Server {
 func (s *Server) Start(ctx context.Context) error {
 	inst := instance.GetInstance(ctx)
 	inst.WaitGroup.Add(1)
-	lis, err := net.Listen("tcp", ":40426")
+	var port string
+	if inst.Config.RPC.Bind == "" {
+		port = ":40426"
+	} else {
+		port = inst.Config.RPC.Bind
+	}
+	lis, err := net.Listen("tcp", port)
 	if err != nil {
 		return err
 	}
@@ -82,7 +93,7 @@ func (s *Server) Start(ctx context.Context) error {
 			inst.Logger.Error(err)
 		}
 	}()
-	inst.Logger.Infof("Server started:40426")
+	inst.Logger.Infof("Server started%s", port)
 	return nil
 }
 func (s *Server) Close(ctx context.Context) {

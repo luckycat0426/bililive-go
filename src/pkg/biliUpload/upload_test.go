@@ -26,7 +26,8 @@ func TestMainUpload(t *testing.T) {
 					DedeUserID:      "14432590",
 					AccessToken:     "9a8ddd4a7c8f569b22f4a697259b4531",
 				},
-				Lives: "test.com",
+				Lives:       "test.com",
+				UploadLines: "ws",
 				VideoInfos: VideoInfos{
 					Tid:         171,
 					Title:       "test",

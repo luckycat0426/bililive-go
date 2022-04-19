@@ -24,12 +24,12 @@ type submitParams struct {
 		Open int    `json:"open"`
 		Lan  string `json:"lan"`
 	} `json:"subtitle"`
-	Videos []uploadRes `json:"videos"`
+	Videos []UploadRes `json:"videos"`
 	Tags   string      `json:"tag"`
 	Dtime  int         `json:"dtime"`
 }
 
-func submit(u Biliup, v []*uploadRes) error {
+func Submit(u Biliup, v []*UploadRes) error {
 	if u.Title == "" {
 		u.Title = v[0].Title
 	}
