@@ -43,6 +43,7 @@ func (a *BaseLive) NeedUpload() bool {
 func (a *BaseLive) GetUploadInfo() bool {
 	return a.UploadInfo
 }
+
 func (a *BaseLive) SetUpload(b bool) {
 	a.WithUpload = b
 }

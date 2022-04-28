@@ -23,4 +23,5 @@ type Instance struct {
 	ListenerManager interfaces.Module
 	RecorderManager interfaces.Module
 	UploaderManager interfaces.Module
+	Mutex           *sync.RWMutex
 }

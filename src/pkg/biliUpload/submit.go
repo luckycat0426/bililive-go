@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 //test
@@ -29,6 +31,25 @@ type submitParams struct {
 	Dtime  int         `json:"dtime"`
 }
 
+func VerifyAndFix(params *submitParams) error {
+	if params.Copyright < 1 || params.Copyright > 2 {
+		params.Copyright = 2
+		return errors.New("copyright must be 1 or 2,Set to 2")
+	}
+	if params.Copyright == 2 && params.Source == "" {
+		params.Source = "转载地址"
+		return errors.New("when copyright is 2,source must be set")
+	}
+	if params.Tid <= 0 {
+		params.Tid = 122
+		return errors.New("tid must be set,Set to 122")
+	}
+	if params.Title == "" {
+		params.Title = "标题"
+		return errors.New("title must not be empty,set to '标题'")
+	}
+	return nil
+}
 func Submit(u Biliup, v []*UploadRes) error {
 	if u.Title == "" {
 		u.Title = v[0].Title
@@ -52,12 +73,17 @@ func Submit(u Biliup, v []*UploadRes) error {
 		},
 		Dtime: 0,
 	}
+	err := VerifyAndFix(&params)
+	if err != nil {
+		log.Println(err)
+	}
 	for i := range v {
 		params.Videos = append(params.Videos, *v[i])
 	}
-	params_str, _ := json.Marshal(params)
+	paramsStr, _ := json.Marshal(params)
 	for i := 0; i <= 20; i++ {
-		req, _ := http.NewRequest("POST", "http://member.bilibili.com/x/vu/client/add?access_key="+u.User.AccessToken, bytes.NewBuffer(params_str))
+		time.Sleep(time.Second * 5)
+		req, _ := http.NewRequest("POST", "http://member.bilibili.com/x/vu/client/add?access_key="+u.User.AccessToken, bytes.NewBuffer(paramsStr))
 		req.Header = Header
 		res, err := client.Do(req)
 		if err != nil {

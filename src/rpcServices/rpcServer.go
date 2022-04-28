@@ -9,11 +9,16 @@ import (
 	"github.com/luckycat0426/bililive-go/src/instance"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/metadata"
 	"io/ioutil"
 	"net"
+	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 )
+
+var ServerIp string = ""
 
 type Server struct {
 	server *grpc.Server
@@ -52,17 +57,31 @@ func LoadSeverCert(path string) *credentials.TransportCredentials {
 
 func StreamServerInterceptor(ctx context.Context) grpc.StreamServerInterceptor {
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) (err error) {
-
+		ss.SetHeader(metadata.New(map[string]string{
+			"server_ip": ServerIp,
+		}))
 		return handler(srv, &serverStream{
 			ServerStream: ss,
 			ctx:          context.WithValue(ss.Context(), instance.Key, instance.GetInstance(ctx)),
 		})
 	}
 }
+func findIP(input string) string {
+	numBlock := "(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])"
+	regexPattern := numBlock + "\\." + numBlock + "\\." + numBlock + "\\." + numBlock
 
+	regEx := regexp.MustCompile(regexPattern)
+	return regEx.FindString(input)
+}
 func NewRpcServer(ctx context.Context) *Server {
 	inst := instance.GetInstance(ctx)
 	config := inst.Config
+	res, _ := http.Get("http://ip.3322.net")
+	ip, _ := ioutil.ReadAll(res.Body)
+	ServerIp = findIP(string(ip))
+	inst.Logger.Info("RpcServer", "Get Server IP", ServerIp)
+	res.Body.Close()
+
 	rpcServer := grpc.NewServer(grpc.Creds(*LoadSeverCert(config.CertPath)), grpc.StreamInterceptor(StreamServerInterceptor(ctx)))
 	//rpcServer := grpc.NewServer(grpc.Creds(insecure.NewCredentials()), grpc.StreamInterceptor(StreamServerInterceptor(ctx)))
 	RegisterRecordServiceServer(rpcServer, &RecordService{})

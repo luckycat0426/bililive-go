@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/google/go-querystring/query"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -56,6 +57,10 @@ type uploadOs struct {
 	os       string
 	query    string
 	probeUrl string
+}
+type UploadedFile struct {
+	FilePath string
+	FileName string
 }
 
 var client http.Client
@@ -199,52 +204,57 @@ func UploadFile(file *os.File, user User, lines string) (*UploadRes, error) {
 	}
 	return &UploadRes{}, errors.New("unknown upload os")
 }
-func FolderUpload(folder string, u User, lines string) ([]*UploadRes, error) {
+func FolderUpload(folder string, u User, lines string) ([]*UploadRes, []UploadedFile, error) {
 	dir, err := ioutil.ReadDir(folder)
 	if err != nil {
 		fmt.Printf("read dir error:%s", err)
-		return nil, err
+		return nil, nil, err
 	}
+	var uploadedFiles []UploadedFile
 	var submitFiles []*UploadRes
 	for _, file := range dir {
 		filename := filepath.Join(folder, file.Name())
-		now := time.Now()
-		if diff := now.Sub(file.ModTime()); diff.Minutes() < 3 {
-			fmt.Printf("%s is too new, skip it\n", filename)
-			continue
-		}
+		//now := time.Now()
+		//if diff := now.Sub(file.ModTime()); diff.Minutes() < 3 {
+		//	fmt.Printf("%s is too new, skip it\n", filename)
+		//	continue
+		//}
 		uploadFile, err := os.Open(filename)
 		if err != nil {
-			fmt.Printf("open file error:%s", err)
-			return nil, err
+			log.Printf("open file %s error:%s", filename, err)
+			continue
 		}
 		videoPart, err := UploadFile(uploadFile, u, lines)
 		if err != nil {
-			fmt.Printf("UploadFile file error:%s", err)
+			log.Printf("UploadFile file error:%s", err)
 			uploadFile.Close()
 			continue
 		}
+		uploadedFiles = append(uploadedFiles, UploadedFile{
+			FilePath: folder,
+			FileName: file.Name(),
+		})
 		submitFiles = append(submitFiles, videoPart)
 		uploadFile.Close()
 	}
-	return submitFiles, nil
+	return submitFiles, uploadedFiles, nil
 }
-func MainUpload(uploadPath string, Biliup Biliup) error {
+func UploadFolderWithSubmit(uploadPath string, Biliup Biliup) ([]UploadedFile, error) {
 	var submitFiles []*UploadRes
 	if !filepath.IsAbs(uploadPath) {
 		pwd, _ := os.Getwd()
 		uploadPath = filepath.Join(pwd, uploadPath)
 	}
 	fmt.Println(uploadPath)
-	submitFiles, err := FolderUpload(uploadPath, Biliup.User, Biliup.UploadLines)
+	submitFiles, uploadedFile, err := FolderUpload(uploadPath, Biliup.User, Biliup.UploadLines)
 	if err != nil {
 		fmt.Printf("UploadFile file error:%s", err)
-		return err
+		return nil, err
 	}
 	err = Submit(Biliup, submitFiles)
 	if err != nil {
 		fmt.Printf("Submit file error:%s", err)
-		return err
+		return nil, err
 	}
-	return nil
+	return uploadedFile, nil
 }

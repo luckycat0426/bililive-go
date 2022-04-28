@@ -19,6 +19,7 @@ import (
 	"github.com/luckycat0426/bililive-go/src/rpcServices"
 	"os"
 	"os/signal"
+	"sync"
 	"syscall"
 )
 
@@ -45,6 +46,7 @@ func main() {
 	inst := new(instance.Instance)
 	inst.Config = config
 	inst.Cache = gcache.New(128).LRU().Build()
+	inst.Mutex = new(sync.RWMutex)
 	ctx := context.WithValue(context.Background(), instance.Key, inst)
 
 	logger := log.New(ctx)

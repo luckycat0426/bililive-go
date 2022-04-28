@@ -3,6 +3,7 @@ package recorders
 import (
 	"context"
 	"github.com/luckycat0426/bililive-go/src/pkg/biliUpload"
+	"os"
 	"sync"
 	"time"
 
@@ -64,26 +65,41 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 	ed.AddEventListener(listeners.StartUpload, events.NewEventListener(func(event *events.Event) {
 		live := event.Object.(live.Live)
 		inst := instance.GetInstance(ctx)
-		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+		inst.Mutex.RLock()
+		b, ok := inst.Biliup[live.GetLiveId()]
+		inst.Mutex.RUnlock()
+		if ok {
 			live.SetUploadInfo(true)
-			biliUpload.MainUpload(live.GetUploadPath(), b)
+			defer live.SetUploadInfo(false)
+			uploadedFile, err := biliUpload.UploadFolderWithSubmit(live.GetUploadPath(), b)
+			if err != nil {
+				inst.Logger.Errorf("failed to upload folder, err: %v", err)
+			} else {
+				for _, v := range uploadedFile {
+					inst.Logger.Infof("file: %s uploaded, deleting", v.FileName)
+					err := os.Remove(v.FilePath + v.FileName)
+					if err != nil {
+						inst.Logger.Errorf("failed to delete file: %s, err: %v", v.FileName, err)
+					}
+				}
+
+			}
 		} else {
 			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
 		}
-		live.SetUploadInfo(false)
 	}))
-	ed.AddEventListener(listeners.StartUploadWithDelay, events.NewEventListener(func(event *events.Event) {
-		time.Sleep(time.Minute * 3)
-		live := event.Object.(live.Live)
-		inst := instance.GetInstance(ctx)
-		if b, ok := inst.Biliup[live.GetLiveId()]; ok {
-			live.SetUploadInfo(true)
-			biliUpload.MainUpload(live.GetUploadPath(), b)
-		} else {
-			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
-		}
-		live.SetUploadInfo(false)
-	}))
+	//ed.AddEventListener(listeners.StartUploadWithDelay, events.NewEventListener(func(event *events.Event) {
+	//	time.Sleep(time.Minute * 3)
+	//	live := event.Object.(live.Live)
+	//	inst := instance.GetInstance(ctx)
+	//	if b, ok := inst.Biliup[live.GetLiveId()]; ok {
+	//		live.SetUploadInfo(true)
+	//		biliUpload.MainUpload(live.GetUploadPath(), b)
+	//	} else {
+	//		inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
+	//	}
+	//	live.SetUploadInfo(false)
+	//}))
 
 	removeEvtListener := events.NewEventListener(func(event *events.Event) {
 		live := event.Object.(live.Live)
@@ -100,9 +116,11 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 
 func (m *manager) Start(ctx context.Context) error {
 	inst := instance.GetInstance(ctx)
+	inst.Mutex.RLock()
 	if inst.Config.RPC.Enable || len(inst.Lives) > 0 {
 		inst.WaitGroup.Add(1)
 	}
+	inst.Mutex.RUnlock()
 	m.registryListener(ctx, inst.EventDispatcher.(events.Dispatcher))
 	return nil
 }

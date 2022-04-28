@@ -35,9 +35,11 @@ type manager struct {
 
 func (m *manager) Start(ctx context.Context) error {
 	inst := instance.GetInstance(ctx)
+	inst.Mutex.RLock()
 	if inst.Config.RPC.Enable || len(inst.Lives) > 0 {
 		inst.WaitGroup.Add(1)
 	}
+	inst.Mutex.RUnlock()
 	return nil
 }
 

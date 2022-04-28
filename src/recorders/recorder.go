@@ -77,9 +77,8 @@ type recorder struct {
 	startTime  time.Time
 	parser     parser.Parser
 	parserLock *sync.RWMutex
-
-	stop  chan struct{}
-	state uint32
+	stop       chan struct{}
+	state      uint32
 }
 
 func NewRecorder(ctx context.Context, live live.Live) (Recorder, error) {

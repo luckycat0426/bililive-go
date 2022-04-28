@@ -1,7 +1,9 @@
 package biliUpload
 
 import (
+	"fmt"
 	"testing"
+	"time"
 )
 
 func TestMainUpload(t *testing.T) {
@@ -29,10 +31,10 @@ func TestMainUpload(t *testing.T) {
 				Lives:       "test.com",
 				UploadLines: "ws",
 				VideoInfos: VideoInfos{
-					Tid:         171,
-					Title:       "test",
-					Tag:         []string{"test"},
-					Source:      "test",
+					Tid:   171,
+					Title: "test",
+					//Tag:         []string{"test"},
+					//Source:      "test",
 					Copyright:   2,
 					Description: "test",
 				},
@@ -42,9 +44,31 @@ func TestMainUpload(t *testing.T) {
 	}
 
 	t.Run(tests.name, func(t *testing.T) {
-		if err := MainUpload(tests.args.uploadPath, tests.args.Biliup); (err != nil) != tests.wantErr {
+		if _, err := UploadFolderWithSubmit(tests.args.uploadPath, tests.args.Biliup); (err != nil) != tests.wantErr {
 			t.Errorf("MainUpload() error = %v, wantErr %v", err, tests.wantErr)
 		}
 	})
+
+}
+func TestLock(t *testing.T) {
+	b := 0
+	tick := time.Tick(time.Second)
+	go func() {
+		for range tick {
+			fmt.Println(b)
+		}
+	}()
+	tick2 := time.Tick(time.Second * 10)
+	go func() {
+		i := 0
+		for range tick2 {
+			i++
+			b = i
+		}
+	}()
+	fmt.Println("test")
+	for {
+		time.Sleep(time.Second)
+	}
 
 }
