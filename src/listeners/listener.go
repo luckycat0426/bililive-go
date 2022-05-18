@@ -109,9 +109,15 @@ func (l *listener) refresh() {
 		evtTyp = RoomNameChanged
 		logInfo = "Room name was changed"
 	}
-	if evtTyp == LiveEnd {
-		l.ed.DispatchEvent(events.NewEvent(StartUpload, l.Live))
-		l.logger.WithFields(fields).Info("Start upload")
+	if evtTyp == LiveStart {
+		go func() {
+			l.logger.WithFields(fields).Info("Live Start，Wait 3 Minutes to Start Uploader")
+			time.Sleep(time.Minute * 3)
+			l.ed.DispatchEvent(events.NewEvent(UploadStart, l.Live))
+			l.logger.WithFields(fields).Info("Starting Uploader")
+
+		}()
+
 	}
 	l.ed.DispatchEvent(events.NewEvent(evtTyp, l.Live))
 	l.logger.WithFields(fields).Info(logInfo)

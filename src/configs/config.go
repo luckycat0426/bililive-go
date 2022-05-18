@@ -36,7 +36,8 @@ func (r *RPC) verify() error {
 
 // Feature info.
 type Feature struct {
-	UseNativeFlvParser bool `yaml:"use_native_flv_parser"`
+	UseNativeFlvParser  bool `yaml:"use_native_flv_parser"`
+	UploadThresholdSize int  `yaml:"upload_threshold_size"`
 }
 
 // VideoSplitStrategies info.
@@ -69,7 +70,8 @@ var defaultConfig = Config{
 	Interval:   30,
 	OutPutPath: "./",
 	Feature: Feature{
-		UseNativeFlvParser: false,
+		UseNativeFlvParser:  false,
+		UploadThresholdSize: 100 * 1024 * 1024,
 	},
 	LiveRooms: []string{},
 	file:      "",

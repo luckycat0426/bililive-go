@@ -17,6 +17,7 @@ import (
 	"github.com/luckycat0426/bililive-go/src/pkg/utils"
 	"github.com/luckycat0426/bililive-go/src/recorders"
 	"github.com/luckycat0426/bililive-go/src/rpcServices"
+	"github.com/luckycat0426/bililive-go/src/uploaders"
 	"os"
 	"os/signal"
 	"sync"
@@ -63,11 +64,15 @@ func main() {
 	}
 	lm := listeners.NewManager(ctx)
 	rm := recorders.NewManager(ctx)
+	um := uploaders.NewManager(ctx)
 	if err := lm.Start(ctx); err != nil {
 		logger.Fatalf("failed to init listener manager, error: %s", err)
 	}
 	if err := rm.Start(ctx); err != nil {
 		logger.Fatalf("failed to init recorder manager, error: %s", err)
+	}
+	if err := um.Start(ctx); err != nil {
+		logger.Fatalf("failed to init uploader manager, error: %s", err)
 	}
 
 	c := make(chan os.Signal)
@@ -77,6 +82,7 @@ func main() {
 		inst.Server.Close(ctx)
 		inst.ListenerManager.Close(ctx)
 		inst.RecorderManager.Close(ctx)
+		inst.UploaderManager.Close(ctx)
 	}()
 
 	inst.WaitGroup.Wait()

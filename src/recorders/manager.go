@@ -2,8 +2,6 @@ package recorders
 
 import (
 	"context"
-	"github.com/luckycat0426/bililive-go/src/pkg/biliUpload"
-	"os"
 	"sync"
 	"time"
 
@@ -62,32 +60,32 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 			instance.GetInstance(ctx).Logger.Errorf("failed to cronRestart recorder, err: %v", err)
 		}
 	}))
-	ed.AddEventListener(listeners.StartUpload, events.NewEventListener(func(event *events.Event) {
-		live := event.Object.(live.Live)
-		inst := instance.GetInstance(ctx)
-		inst.Mutex.RLock()
-		b, ok := inst.Biliup[live.GetLiveId()]
-		inst.Mutex.RUnlock()
-		if ok {
-			live.SetUploadInfo(true)
-			defer live.SetUploadInfo(false)
-			uploadedFile, err := biliUpload.UploadFolderWithSubmit(live.GetUploadPath(), b)
-			if err != nil {
-				inst.Logger.Errorf("failed to upload folder, err: %v", err)
-			} else {
-				for _, v := range uploadedFile {
-					inst.Logger.Infof("file: %s uploaded, deleting", v.FileName)
-					err := os.Remove(v.FilePath + v.FileName)
-					if err != nil {
-						inst.Logger.Errorf("failed to delete file: %s, err: %v", v.FileName, err)
-					}
-				}
-
-			}
-		} else {
-			inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
-		}
-	}))
+	//ed.AddEventListener(listeners.StartUpload, events.NewEventListener(func(event *events.Event) {
+	//	live := event.Object.(live.Live)
+	//	inst := instance.GetInstance(ctx)
+	//	inst.Mutex.RLock()
+	//	b, ok := inst.Biliup[live.GetLiveId()]
+	//	inst.Mutex.RUnlock()
+	//	if ok {
+	//		live.SetUploadInfo(true)
+	//		defer live.SetUploadInfo(false)
+	//		uploadedFile, err := biliUpload.UploadFolderWithSubmit(live.GetUploadPath(), b)
+	//		if err != nil {
+	//			inst.Logger.Errorf("failed to upload folder, err: %v", err)
+	//		} else {
+	//			for _, v := range uploadedFile {
+	//				inst.Logger.Infof("file: %s uploaded, deleting", v.FileName)
+	//				err := os.Remove(filepath.Join(v.FilePath, v.FileName))
+	//				if err != nil {
+	//					inst.Logger.Errorf("failed to delete file: %s, err: %v", v.FileName, err)
+	//				}
+	//			}
+	//
+	//		}
+	//	} else {
+	//		inst.Logger.Errorf("failed to find UploadInfo for live: %v", live.GetLiveId())
+	//	}
+	//}))
 	//ed.AddEventListener(listeners.StartUploadWithDelay, events.NewEventListener(func(event *events.Event) {
 	//	time.Sleep(time.Minute * 3)
 	//	live := event.Object.(live.Live)
@@ -109,6 +107,7 @@ func (m *manager) registryListener(ctx context.Context, ed events.Dispatcher) {
 		if err := m.RemoveRecorder(ctx, live.GetLiveId()); err != nil {
 			instance.GetInstance(ctx).Logger.Errorf("failed to remove recorder, err: %v", err)
 		}
+		ed.DispatchEvent(events.NewEvent(listeners.RemoveRecorder, live))
 	})
 	ed.AddEventListener(listeners.LiveEnd, removeEvtListener)
 	ed.AddEventListener(listeners.ListenStop, removeEvtListener)
@@ -171,12 +170,14 @@ func (m *manager) cronRestart(ctx context.Context, live live.Live) {
 }
 
 func (m *manager) RestartRecorder(ctx context.Context, live live.Live) error {
+	ed := instance.GetInstance(ctx).EventDispatcher.(events.Dispatcher)
 	if err := m.RemoveRecorder(ctx, live.GetLiveId()); err != nil {
 		return err
 	}
 	if err := m.AddRecorder(ctx, live); err != nil {
 		return err
 	}
+	ed.DispatchEvent(events.NewEvent(listeners.RestartRecorder, live))
 	return nil
 }
 

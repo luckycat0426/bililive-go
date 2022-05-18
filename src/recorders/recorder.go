@@ -63,22 +63,24 @@ type Recorder interface {
 	Start() error
 	StartTime() time.Time
 	GetStatus() (map[string]string, error)
+	GetRecordingFileName() string
+	SetRecordingFileName(string)
 	Close()
 }
 
 type recorder struct {
-	Live       live.Live
-	OutPutPath string
-
-	config     *configs.Config
-	ed         events.Dispatcher
-	logger     *interfaces.Logger
-	cache      gcache.Cache
-	startTime  time.Time
-	parser     parser.Parser
-	parserLock *sync.RWMutex
-	stop       chan struct{}
-	state      uint32
+	Live              live.Live
+	OutPutPath        string
+	RecordingFileName string
+	config            *configs.Config
+	ed                events.Dispatcher
+	logger            *interfaces.Logger
+	cache             gcache.Cache
+	startTime         time.Time
+	parser            parser.Parser
+	parserLock        *sync.RWMutex
+	stop              chan struct{}
+	state             uint32
 }
 
 func NewRecorder(ctx context.Context, live live.Live) (Recorder, error) {
@@ -137,8 +139,10 @@ func (r *recorder) tryRecode() {
 		return
 	}
 	r.setAndCloseParser(p)
+	r.SetRecordingFileName(fileName)
+	defer r.SetRecordingFileName("")
 	r.startTime = time.Now()
-	r.getLogger().Debugln(r.parser.ParseLiveStream(url, r.Live, fileName))
+	r.getLogger().Debugln("parser live stream", r.parser.ParseLiveStream(url, r.Live, fileName))
 	removeEmptyFile(fileName)
 }
 
@@ -152,7 +156,16 @@ func (r *recorder) run() {
 		}
 	}
 }
-
+func (r *recorder) GetRecordingFileName() string {
+	r.parserLock.RLock()
+	defer r.parserLock.RUnlock()
+	return r.RecordingFileName
+}
+func (r *recorder) SetRecordingFileName(fileName string) {
+	r.parserLock.Lock()
+	defer r.parserLock.Unlock()
+	r.RecordingFileName = fileName
+}
 func (r *recorder) getParser() parser.Parser {
 	r.parserLock.RLock()
 	defer r.parserLock.RUnlock()

@@ -78,6 +78,10 @@ func Submit(u Biliup, v []*UploadRes) error {
 		log.Println(err)
 	}
 	for i := range v {
+		if v[i] == nil {
+			fmt.Println("V is nil")
+			continue
+		}
 		params.Videos = append(params.Videos, *v[i])
 	}
 	paramsStr, _ := json.Marshal(params)

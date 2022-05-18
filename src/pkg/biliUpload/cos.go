@@ -32,6 +32,10 @@ type cosFetchHeaders struct {
 	XUposAuth                string `json:"X-Upos-Auth"`
 	XUposFetchSource         string `json:"X-Upos-Fetch-Source"`
 }
+type cosFetchInfo struct {
+	Url           string `json:"url"`
+	Authorization string `json:"Authorization"`
+}
 type cosPreUploadXmlRes struct {
 	XMLName  xml.Name `xml:"InitiateMultipartUploadResult"`
 	Bucket   string   `xml:"Bucket"`
@@ -54,6 +58,7 @@ func cos(file *os.File, totalSize int, ret *cosUploadSegments, internal bool, Ch
 	if internal {
 		uploadUrl = strings.Replace(uploadUrl, "cos.accelerate", "cos-internal.ap-shanghai", 1)
 	}
+	fmt.Println(ret.FetchHeaders)
 	client := &http.Client{}
 	client.Timeout = 5 * time.Second
 	req, _ := http.NewRequest("POST", uploadUrl+"?uploads&output=json", nil)
@@ -110,9 +115,7 @@ func cos(file *os.File, totalSize int, ret *cosUploadSegments, internal bool, Ch
 			Value string `xml:",innerxml"`
 		}{Value: etag}})
 	}
-	testParts, _ := xml.Marshal(parts)
 
-	fmt.Println(testParts)
 	sort.Slice(parts.Part, func(i, j int) bool {
 		return parts.Part[i].PartNumber < parts.Part[j].PartNumber
 	})
@@ -168,6 +171,10 @@ func cos(file *os.File, totalSize int, ret *cosUploadSegments, internal bool, Ch
 				Title:    strings.TrimSuffix(filepath.Base(file.Name()), filepath.Ext(file.Name())),
 				Filename: ret.BiliFilename,
 				Desc:     "",
+				Info: cosFetchInfo{
+					Url:           ret.FetchHeaders.XUposFetchSource,
+					Authorization: ret.FetchHeaders.FetchHeaderAuthorization,
+				},
 			}
 			return upRes, nil
 		} else {

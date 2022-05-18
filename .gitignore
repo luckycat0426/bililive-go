@@ -7,7 +7,7 @@
 *.so
 *.dylib
 src/pkg/biliUpload/upload_test.go
-
+cert/
 # Test binary, build with `go test -c`
 *.test
 src/pkg/biliUpload/upload_test.go
@@ -160,3 +160,4 @@ bin/
 # webapp ignore
 node_modules
 /斗鱼/
+/cert/

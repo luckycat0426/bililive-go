@@ -43,9 +43,10 @@ type User struct {
 	AccessToken     string `json:"access_token"`
 }
 type UploadRes struct {
-	Title    string `json:"title"`
-	Filename string `json:"filename"`
-	Desc     string `json:"desc"`
+	Title    string      `json:"title"`
+	Filename string      `json:"filename"`
+	Desc     string      `json:"desc"`
+	Info     interface{} `json:"-"`
 }
 
 type UploadedVideoInfo struct {

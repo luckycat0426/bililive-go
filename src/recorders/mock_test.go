@@ -19,6 +19,11 @@ type MockRecorder struct {
 	recorder *MockRecorderMockRecorder
 }
 
+func (m *MockRecorder) SetRecordingFileName(s string) {
+	//TODO implement me
+	panic("implement me")
+}
+
 // MockRecorderMockRecorder is the mock recorder for MockRecorder.
 type MockRecorderMockRecorder struct {
 	mock *MockRecorder
@@ -46,6 +51,20 @@ func (m *MockRecorder) Close() {
 func (mr *MockRecorderMockRecorder) Close() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Close", reflect.TypeOf((*MockRecorder)(nil).Close))
+}
+
+// GetRecordingFileName mocks base method.
+func (m *MockRecorder) GetRecordingFileName() string {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "GetRecordingFileName")
+	ret0, _ := ret[0].(string)
+	return ret0
+}
+
+// GetRecordingFileName indicates an expected call of GetRecordingFileName.
+func (mr *MockRecorderMockRecorder) GetRecordingFileName() *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetRecordingFileName", reflect.TypeOf((*MockRecorder)(nil).GetRecordingFileName))
 }
 
 // GetStatus mocks base method.

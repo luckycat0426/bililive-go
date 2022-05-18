@@ -2,7 +2,6 @@ package upload
 
 import (
 	"errors"
-	"github.com/luckycat0426/bililive-go/src/live"
 )
 
 type FilesNeedUpload []string
@@ -12,11 +11,12 @@ type UploadedFile struct {
 	Size int64
 	Path string
 	Type string
-	info interface{}
+	Info interface{}
 }
 type ID string
 type Upload interface {
-	Upload(FilesNeedUpload, live.Live) ([]UploadedFile, error)
+	Upload(FilesNeedUpload) ([]UploadedFile, error)
+	Submit([]UploadedFile) error
 	Stop() error
 }
 
@@ -30,10 +30,10 @@ func Register(name string, b Builder) {
 	m[name] = b
 }
 
-func New(name string, cfg map[string]string) (Upload, error) {
+func New(name string, uploader interface{}) (Upload, error) {
 	builder, ok := m[name]
 	if !ok {
 		return nil, errors.New("unknown Uploader")
 	}
-	return builder.Build(cfg)
+	return builder.Build(uploader)
 }

@@ -23,6 +23,7 @@ var (
 	RPC             = app.Flag("enable-rpc", "Enable RPC server.").Default("false").Bool()
 	RPCBind         = app.Flag("rpc-bind", "RPC server bind address").Default(":40426").String()
 	NativeFlvParser = app.Flag("native-flv-parser", "use native flv parser").Default("false").Bool()
+	MinimalFileSize = app.Flag("minimal-file-size", "minimal file size").Default("20").Int()
 	OutputFileTmpl  = app.Flag("output-file-tmpl", "output file name template").Default("").String()
 	SplitStrategies = app.Flag("split-strategies", "video split strategies, support\"on_room_name_changed\", \"max_duration:(duration)\"").Strings()
 )
@@ -45,7 +46,8 @@ func GenConfigFromFlags() *configs.Config {
 		OutputTmpl: *OutputFileTmpl,
 		LiveRooms:  *Input,
 		Feature: configs.Feature{
-			UseNativeFlvParser: *NativeFlvParser,
+			UseNativeFlvParser:  *NativeFlvParser,
+			UploadThresholdSize: *MinimalFileSize,
 		},
 	}
 	if SplitStrategies != nil && len(*SplitStrategies) > 0 {
